@@ -1,0 +1,24 @@
+{
+    "name": "kafka-test",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "omnisharp.useGlobalMono": "always"
+            },
+            "extensions": [
+                "ms-dotnettools.csdevkit",
+                "ms-dotnettools.csharp",
+                "ms-dotnettools.vscode-dotnet-runtime"
+            ]
+        }
+    },
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+    ],
+    "dockerComposeFile": [
+        "${localWorkspaceFolder}/docker-compose.yml"
+    ],
+    "service": "app"
+}
