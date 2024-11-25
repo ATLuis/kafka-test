@@ -5,11 +5,12 @@ namespace producer
 {
     class Program
     {
-        static readonly string TOPIC = "test-topic";
         static void Main(string[] args)
         {
-            var config = new ProducerConfig { BootstrapServers = "kafka:29092" };
+            Console.WriteLine("Enter the topic name you want to produce events for:");
+            string TOPIC = Console.ReadLine();
 
+            var config = new ProducerConfig { BootstrapServers = "kafka:29092" };
             using var producer = new ProducerBuilder<Null, string>(config).Build();
 
             while (true)
