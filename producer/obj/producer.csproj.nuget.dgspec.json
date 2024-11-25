@@ -10,23 +10,21 @@
         "projectUniqueName": "/workspace/producer/producer.csproj",
         "projectName": "producer",
         "projectPath": "/workspace/producer/producer.csproj",
-        "packagesPath": "/root/.nuget/packages/",
+        "packagesPath": "/home/vscode/.nuget/packages/",
         "outputPath": "/workspace/producer/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "/usr/share/dotnet/sdk/NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "/root/.nuget/NuGet/NuGet.Config"
+          "/home/vscode/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "netcoreapp2.1"
+          "netcoreapp6.0"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "netcoreapp2.1": {
+          "net6.0": {
+            "targetAlias": "netcoreapp6.0",
             "projectReferences": {}
           }
         },
@@ -37,19 +35,31 @@
         }
       },
       "frameworks": {
-        "netcoreapp2.1": {
+        "net6.0": {
+          "targetAlias": "netcoreapp6.0",
           "dependencies": {
-            "Microsoft.NETCore.App": {
+            "Confluent.Kafka": {
               "target": "Package",
-              "version": "[2.1.0, )",
-              "autoReferenced": true
+              "version": "[2.6.1, )"
             }
           },
           "imports": [
-            "net461"
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
           ],
           "assetTargetFallback": true,
-          "warn": true
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.427/RuntimeIdentifierGraph.json"
         }
       }
     }

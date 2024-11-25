@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/vscode/devcontainers/dotnet:2.1
+FROM mcr.microsoft.com/vscode/devcontainers/dotnet:6.0
 
 WORKDIR /workspace
 
