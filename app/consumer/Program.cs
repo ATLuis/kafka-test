@@ -17,6 +17,7 @@ namespace consumer
                 BootstrapServers = "kafka:29092",
                 GroupId = GROUP_ID,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
+                // EnableAutoCommit = false,
                 // Debug = "all"
             };
 
@@ -63,17 +64,33 @@ namespace consumer
 
             while (true)
             {
+                ConsumeResult<Ignore, string> consumeResult = null;
                 try
                 {
-                    var consumeResult = consumer.Consume(TimeSpan.FromSeconds(10));
+                    consumeResult = consumer.Consume(TimeSpan.FromSeconds(10));
+                    
                     if (consumeResult?.Message?.Value != null)
                     {
                         Console.WriteLine($"Received message: {consumeResult.Message.Value}");
+                        consumer.Commit(consumeResult);
                     }
                 }
                 catch (ConsumeException e)
                 {
+                    if (consumeResult != null)
+                    {
+                        consumer.Seek(consumeResult.TopicPartitionOffset);
+                    }
                     Console.WriteLine($"Error occured: {e.Error.Reason}");
+                }
+                catch (Exception e)
+                {
+                    
+                    if (consumeResult != null)
+                    {
+                        consumer.Seek(consumeResult.TopicPartitionOffset);
+                    }
+                    Console.WriteLine($"Error occured: {e.Message}");
                 }
             }
         }
