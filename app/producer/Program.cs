@@ -22,9 +22,14 @@ namespace producer
                     break;
                 }
 
+                if (string.IsNullOrEmpty(input))
+                {
+                    continue;
+                }
+
                 producer.Produce(TOPIC, new Message<Null, string> { Value = input });
                 producer.Flush();
-                Console.WriteLine("Message sent!");
+                Console.Write("Message sent! ");
             }
         }
     }
