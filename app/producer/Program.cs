@@ -10,7 +10,7 @@ namespace producer
             Console.WriteLine("Enter the topic name you want to produce events for:");
             string TOPIC = Console.ReadLine();
 
-            var config = new ProducerConfig { BootstrapServers = "kafka:29092" };
+            var config = new ProducerConfig { BootstrapServers = "kafka:9092" };
             using var producer = new ProducerBuilder<Null, string>(config).Build();
 
             while (true)

@@ -21,7 +21,7 @@ namespace consumer
                 // Debug = "all"
             };
 
-            using var adminClient = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = "kafka:29092" }).Build();
+            using var adminClient = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = "kafka:9092" }).Build();
             try
             {
                 var topicExists = false;
