@@ -7,6 +7,11 @@ namespace consumer
     class Program
     {
         static readonly string GROUP_ID = "my-consumer-group";
+        // static readonly string BootstrapServers = "localhost:9092,localhost:9093";
+        static readonly string BootstrapServers = "kafka1:29092,kafka2:29093";
+        // static readonly string BootstrapServers = "kafka1:29092,kafka2:29093";
+        // static readonly string BootstrapServers = "kafka1:29092";
+        // static readonly string BootstrapServers = "kafka2:29093";
         static void Main(string[] args)
         {
             Console.WriteLine("Enter the topic name you want to consume:");
@@ -14,14 +19,22 @@ namespace consumer
 
             var config = new ConsumerConfig
             {
-                BootstrapServers = "kafka:29092",
+                BootstrapServers = BootstrapServers,
                 GroupId = GROUP_ID,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = true,
+                SessionTimeoutMs = 10000,
+                HeartbeatIntervalMs = 3000,
+                MaxPollIntervalMs = 300000,
+                MetadataMaxAgeMs = 60000,
+                SocketKeepaliveEnable = true,
+                ReconnectBackoffMs = 1000,
+                ReconnectBackoffMaxMs = 10000,
                 // EnableAutoCommit = false,
                 // Debug = "all"
             };
-
-            using var adminClient = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = "kafka:9092" }).Build();
+            using var adminClient = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = BootstrapServers }).Build();
+            
             try
             {
                 var topicExists = false;
@@ -33,6 +46,7 @@ namespace consumer
                         if (metadata.Topics.Any(t => t.Topic == TOPIC && t.Error.Code == ErrorCode.NoError))
                         {
                             topicExists = true;
+                            Console.WriteLine($"Topic {TOPIC} exists.");
                         }
                     }
                     catch (KafkaException ex)
@@ -50,11 +64,23 @@ namespace consumer
             using var consumer = new ConsumerBuilder<Ignore, string>(config)
                 .SetPartitionsAssignedHandler((c, partitions) =>
                 {
-                    Console.WriteLine($"Consumer started for group id {GROUP_ID} assigned to partition {string.Join(", ", partitions)}");
+                    Console.WriteLine($"Consumer started for group id {GROUP_ID} assigned to partitions: {string.Join(", ", partitions)}");
                 })
                 .SetPartitionsRevokedHandler((c, partitions) =>
                 {
-                    Console.WriteLine($"Consumer revoked for group id {GROUP_ID} and topic {string.Join(", ", partitions)}");
+                    Console.WriteLine($"Consumer revoked for group id {GROUP_ID} and partitions: {string.Join(", ", partitions)}");
+                })
+                .SetErrorHandler((_, e) =>
+                {
+                    Console.WriteLine($"Error: {e.Reason}");
+                })
+                .SetStatisticsHandler((_, json) =>
+                {
+                    Console.WriteLine($"Statistics: {json}");
+                })
+                .SetLogHandler((_, logMessage) =>
+                {
+                    Console.WriteLine($"Log: {logMessage.Message}");
                 })
                 .Build();
 
@@ -73,6 +99,10 @@ namespace consumer
                     {
                         Console.WriteLine($"Received message: {consumeResult.Message.Value}");
                         consumer.Commit(consumeResult);
+                    }
+                    else
+                    {
+                        Console.WriteLine("No message received in the last 10 seconds.");
                     }
                 }
                 catch (ConsumeException e)
