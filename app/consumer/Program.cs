@@ -17,22 +17,38 @@ namespace consumer
             Console.WriteLine("Enter the topic name you want to consume:");
             string TOPIC = Console.ReadLine();
 
-            var config = new ConsumerConfig
-            {
-                BootstrapServers = BootstrapServers,
-                GroupId = GROUP_ID,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = true,
-                SessionTimeoutMs = 10000,
-                HeartbeatIntervalMs = 3000,
-                MaxPollIntervalMs = 300000,
-                MetadataMaxAgeMs = 60000,
-                SocketKeepaliveEnable = true,
-                ReconnectBackoffMs = 1000,
-                ReconnectBackoffMaxMs = 10000,
-                // EnableAutoCommit = false,
-                // Debug = "all"
+            // var config = new ConsumerConfig
+            // {
+            //     BootstrapServers = BootstrapServers,
+            //     GroupId = GROUP_ID,
+            //     AutoOffsetReset = AutoOffsetReset.Earliest,
+            //     EnableAutoCommit = true,
+            //     SessionTimeoutMs = 10000,
+            //     HeartbeatIntervalMs = 3000,
+            //     MaxPollIntervalMs = 300000,
+            //     MetadataMaxAgeMs = 60000,
+            //     SocketKeepaliveEnable = true,
+            //     ReconnectBackoffMs = 1000,
+            //     ReconnectBackoffMaxMs = 10000,
+            //     // EnableAutoCommit = false,
+            //     // Debug = "all"
+            // };
+            var config = new ConsumerConfig { 
+                BootstrapServers = BootstrapServers, 
+                GroupId = GROUP_ID, 
+                AutoOffsetReset = AutoOffsetReset.Earliest, 
+                EnableAutoCommit = true, 
+                SessionTimeoutMs = 10000, 
+                HeartbeatIntervalMs = 3000, 
+                MaxPollIntervalMs = 300000, 
+                MetadataMaxAgeMs = 5000, 
+                SocketKeepaliveEnable = true, 
+                ReconnectBackoffMs = 1000, 
+                ReconnectBackoffMaxMs = 10000, 
+                // EnableAutoCommit = false, 
+                // Debug = "all" 
             };
+
             using var adminClient = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = BootstrapServers }).Build();
             
             try
