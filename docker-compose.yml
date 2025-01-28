@@ -3,37 +3,74 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      KAFKA_BROKERS: "kafka1:9092,kafka2:9092,kafka3:9092"
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
     volumes:
       - ./:/workspace
-  zookeeper:
-    image: confluentinc/cp-zookeeper:5.5.3
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
+
   kafka1:
-    image: confluentinc/cp-kafka:5.5.3
-    depends_on: [zookeeper]
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafka1
+    container_name: kafka1
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_BROKER_ID: 1
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
-      KAFKA_JMX_PORT: 9991
+      CLUSTER_ID: "JLpdkAlqS5KUklgbwALjzw"  # Genera uno con: kafka-storage.sh random-uuid
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "controller,broker"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
+      KAFKA_LISTENERS: "CONTROLLER://:9093,BROKER://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "BROKER://kafka1:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "BROKER"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    ports:
-      - 9092:9092
+    volumes:
+      - kafka1-data:/var/lib/kafka/data
+
   kafka2:
-    image: confluentinc/cp-kafka:5.5.3
-    depends_on: [zookeeper]
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafka2
+    container_name: kafka2
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:29093,PLAINTEXT_HOST://localhost:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_BROKER_ID: 2
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
-      KAFKA_JMX_PORT: 9992
+      CLUSTER_ID: "JLpdkAlqS5KUklgbwALjzw"  # Mismo que en kafka1
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: "controller,broker"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
+      KAFKA_LISTENERS: "CONTROLLER://:9093,BROKER://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "BROKER://kafka2:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "BROKER"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    ports:
-      - 9093:9093
+    volumes:
+      - kafka2-data:/var/lib/kafka/data
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafka3
+    container_name: kafka3
+    environment:
+      CLUSTER_ID: "JLpdkAlqS5KUklgbwALjzw"  # Mismo que en kafka1
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: "controller,broker"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
+      KAFKA_LISTENERS: "CONTROLLER://:9093,BROKER://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "BROKER://kafka3:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "BROKER"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka3-data:/var/lib/kafka/data
+
+volumes:
+  kafka1-data:
+  kafka2-data:
+  kafka3-data:
+

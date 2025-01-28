@@ -8,7 +8,7 @@ namespace consumer
     {
         static readonly string GROUP_ID = "my-consumer-group";
         // static readonly string BootstrapServers = "localhost:9092,localhost:9093";
-        static readonly string BootstrapServers = "kafka1:29092,kafka2:29093";
+        static readonly string BootstrapServers = Environment.GetEnvironmentVariable("KAFKA_BROKERS");
         // static readonly string BootstrapServers = "kafka1:29092,kafka2:29093";
         // static readonly string BootstrapServers = "kafka1:29092";
         // static readonly string BootstrapServers = "kafka2:29093";
