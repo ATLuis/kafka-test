@@ -24,8 +24,8 @@ namespace producer
             // };
 
             var config = new ProducerConfig { 
-                // BootstrapServers = "localhost:9092,localhost:9093", 
-                    BootstrapServers = "kafka1:29092", 
+                BootstrapServers = "localhost:9092,localhost:9093", 
+                    // BootstrapServers = "kafka1:29092", 
                 // BootstrapServers = "kafka2:29093", 
                 // BootstrapServers = "kafka1:29092", 
                     Acks = Acks.All, 
