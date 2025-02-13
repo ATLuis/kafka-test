@@ -7,32 +7,26 @@ namespace consumer
     class Program
     {
         static readonly string GROUP_ID = "my-consumer-group";
-        // static readonly string BootstrapServers = "localhost:9092,localhost:9093";
-        static readonly string BootstrapServers = "kafka1:29092,kafka2:29093";
-        // static readonly string BootstrapServers = "kafka1:29092,kafka2:29093";
-        // static readonly string BootstrapServers = "kafka1:29092";
-        // static readonly string BootstrapServers = "kafka2:29093";
+
+        /*
+        Your Kafka brokers are actually running on localhost:9092 and localhost:9093, 
+        but the consumer was trying to connect to "kafka1:29092,kafka2:29093". 
+        These addresses are Docker-internal hostnames, meaning they can only be resolved inside the Docker network. 
+        Since your consumer was running outside of Docker, it couldn’t find these broker addresses, which caused the connection issue.
+
+        So, the correct solution depends on where the consumer is running:
+        - Consumer inside Docker: Use BootstrapServers = "kafka1:29092,kafka2:29093".
+        - Consumer outside Docker: Use BootstrapServers = "localhost:9092,localhost:9093"
+        */
+
+        static readonly string BootstrapServers 
+            = "kafka1:29092,kafka2:29093"; // inside Docker
+            // = "localhost:9092,localhost:9093"; //outside Docker
         static void Main(string[] args)
         {
             Console.WriteLine("Enter the topic name you want to consume:");
             string TOPIC = Console.ReadLine();
 
-            // var config = new ConsumerConfig
-            // {
-            //     BootstrapServers = BootstrapServers,
-            //     GroupId = GROUP_ID,
-            //     AutoOffsetReset = AutoOffsetReset.Earliest,
-            //     EnableAutoCommit = true,
-            //     SessionTimeoutMs = 10000,
-            //     HeartbeatIntervalMs = 3000,
-            //     MaxPollIntervalMs = 300000,
-            //     MetadataMaxAgeMs = 60000,
-            //     SocketKeepaliveEnable = true,
-            //     ReconnectBackoffMs = 1000,
-            //     ReconnectBackoffMaxMs = 10000,
-            //     // EnableAutoCommit = false,
-            //     // Debug = "all"
-            // };
             var config = new ConsumerConfig { 
                 BootstrapServers = BootstrapServers, 
                 GroupId = GROUP_ID, 
