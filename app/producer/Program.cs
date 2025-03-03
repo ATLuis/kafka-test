@@ -1,35 +1,28 @@
 ﻿using System;
+using System.Threading;
 using Confluent.Kafka;
 
 namespace producer
 {
     class Program
     {
+        static readonly string BootstrapServers 
+            = "kafka1:29092,kafka2:29093"; // inside Docker
+            // = "localhost:9092,localhost:9093"; //outside Docker
         static void Main(string[] args)
         {
             Console.WriteLine("Enter the topic name you want to produce events for:");
             string TOPIC = Console.ReadLine();
 
-            /*
-            Your Kafka brokers are actually running on localhost:9092 and localhost:9093, 
-            but the consumer was trying to connect to "kafka1:29092,kafka2:29093". 
-            These addresses are Docker-internal hostnames, meaning they can only be resolved inside the Docker network. 
-            Since your consumer was running outside of Docker, it couldn’t find these broker addresses, which caused the connection issue.
-
-            So, the correct solution depends on where the consumer is running:
-            - Consumer inside Docker: Use BootstrapServers = "kafka1:29092,kafka2:29093".
-            - Consumer outside Docker: Use BootstrapServers = "localhost:9092,localhost:9093"
-            */
-
-            var config = new ProducerConfig { 
-                BootstrapServers = "kafka1:29092,kafka2:29093", // inside Docker
-                // BootstrapServers = "localhost:9092,localhost:9093", //outside Docker
-                Acks = Acks.All, 
-                MessageSendMaxRetries = 3, 
-                RetryBackoffMs = 1000, 
-                SocketTimeoutMs = 60000, 
-                MessageTimeoutMs = 60000, 
-                MetadataMaxAgeMs = 5000 
+            var config = new ProducerConfig
+            {
+                BootstrapServers = BootstrapServers,
+                Acks = Acks.All,
+                MessageSendMaxRetries = 3,
+                RetryBackoffMs = 1000,
+                SocketTimeoutMs = 60000,
+                MessageTimeoutMs = 60000,
+                MetadataMaxAgeMs = 5000
             };
 
             using var producer = new ProducerBuilder<Null, string>(config)
@@ -61,24 +54,35 @@ namespace producer
                     continue;
                 }
 
-                try
+                int maxRetries = 5;
+                int attempt = 0;
+                bool sent = false;
+
+                while (attempt < maxRetries && !sent)
                 {
-                    // producer.Produce(TOPIC, new Message<Null, string> { Value = input });
-                    // producer.Flush();
-                    var deliveryReport = producer.ProduceAsync(TOPIC, new Message<Null, string> { Value = input }).Result;
-                    // Console.WriteLine($"Delivered '{deliveryReport.Value}' to '{deliveryReport.TopicPartitionOffset}' with status {deliveryReport.Status} at '{deliveryReport.Timestamp}'.");
-                    Console.WriteLine($"Delivered status: '{deliveryReport.Status}'.");
-                    // if (deliveryReport.Status == PersistenceStatus.NotPersisted)
-                    // {
-                    //     Console.WriteLine("Message was not sent.");
-                    // }
-                    producer.Flush();
-                    // Console.Write("Message sent! ");
+                    attempt++;
+                    try
+                    {
+                        var deliveryReport = producer.ProduceAsync(TOPIC, new Message<Null, string> { Value = input }).Result;
+                        Console.WriteLine($"Delivered status: '{deliveryReport.Status}'.");
+                        sent = true; // Jika berhasil, keluar dari loop retry
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Error producing message: {e.Message}");
+                        if (attempt < maxRetries)
+                        {
+                            Console.WriteLine($"Retrying in 5 seconds... (Attempt {attempt}/{maxRetries})");
+                            Thread.Sleep(5000); // Tunggu 5 detik sebelum retry
+                        }
+                        else
+                        {
+                            Console.WriteLine("Max retry reached. Skipping message.");
+                        }
+                    }
                 }
-                catch (System.Exception e)
-                {
-                    Console.WriteLine($"Error producing message: {e.Message}");
-                }
+
+                producer.Flush();
             }
         }
     }

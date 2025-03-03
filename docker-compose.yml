@@ -1,3 +1,9 @@
+version: '3.8'
+
+volumes:
+  kafka1_data:
+  kafka2_data:
+
 services:
   app:
     build:
@@ -5,35 +11,83 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/workspace
+    environment:
+      KAFKA_BROKERS: "kafka1:29092,kafka2:29093"
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+
   zookeeper:
     image: confluentinc/cp-zookeeper:5.5.3
+    restart: always
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+
   kafka1:
     image: confluentinc/cp-kafka:5.5.3
-    depends_on: [zookeeper]
+    restart: always
+    depends_on:
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
-      KAFKA_JMX_PORT: 9991
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 48
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_REBALANCE_TIMEOUT_MS: 10000
     ports:
       - 9092:9092
+    volumes:
+      - kafka1_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka1:29092 --list || exit 1"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
   kafka2:
     image: confluentinc/cp-kafka:5.5.3
-    depends_on: [zookeeper]
+    restart: always
+    depends_on:
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:29093,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_BROKER_ID: 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
-      KAFKA_JMX_PORT: 9992
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 48
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_REBALANCE_TIMEOUT_MS: 10000
     ports:
       - 9093:9093
+    volumes:
+      - kafka2_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka2:29093 --list || exit 1"]
+      interval: 10s
+      retries: 5
+      start_period: 30s

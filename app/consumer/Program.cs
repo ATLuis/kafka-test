@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using Confluent.Kafka;
 
 namespace consumer
@@ -7,18 +8,6 @@ namespace consumer
     class Program
     {
         static readonly string GROUP_ID = "my-consumer-group";
-
-        /*
-        Your Kafka brokers are actually running on localhost:9092 and localhost:9093, 
-        but the consumer was trying to connect to "kafka1:29092,kafka2:29093". 
-        These addresses are Docker-internal hostnames, meaning they can only be resolved inside the Docker network. 
-        Since your consumer was running outside of Docker, it couldn’t find these broker addresses, which caused the connection issue.
-
-        So, the correct solution depends on where the consumer is running:
-        - Consumer inside Docker: Use BootstrapServers = "kafka1:29092,kafka2:29093".
-        - Consumer outside Docker: Use BootstrapServers = "localhost:9092,localhost:9093"
-        */
-
         static readonly string BootstrapServers 
             = "kafka1:29092,kafka2:29093"; // inside Docker
             // = "localhost:9092,localhost:9093"; //outside Docker
@@ -27,24 +16,23 @@ namespace consumer
             Console.WriteLine("Enter the topic name you want to consume:");
             string TOPIC = Console.ReadLine();
 
-            var config = new ConsumerConfig { 
-                BootstrapServers = BootstrapServers, 
-                GroupId = GROUP_ID, 
-                AutoOffsetReset = AutoOffsetReset.Earliest, 
-                EnableAutoCommit = true, 
-                SessionTimeoutMs = 10000, 
-                HeartbeatIntervalMs = 3000, 
-                MaxPollIntervalMs = 300000, 
-                MetadataMaxAgeMs = 5000, 
-                SocketKeepaliveEnable = true, 
-                ReconnectBackoffMs = 1000, 
-                ReconnectBackoffMaxMs = 10000, 
-                // EnableAutoCommit = false, 
-                // Debug = "all" 
+            var config = new ConsumerConfig
+            {
+                BootstrapServers = BootstrapServers,
+                GroupId = GROUP_ID,
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = true,
+                SessionTimeoutMs = 10000,
+                HeartbeatIntervalMs = 3000,
+                MaxPollIntervalMs = 300000,
+                MetadataMaxAgeMs = 5000,
+                SocketKeepaliveEnable = true,
+                ReconnectBackoffMs = 1000,
+                ReconnectBackoffMaxMs = 10000
             };
 
             using var adminClient = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = BootstrapServers }).Build();
-            
+
             try
             {
                 var topicExists = false;
@@ -62,6 +50,7 @@ namespace consumer
                     catch (KafkaException ex)
                     {
                         Console.WriteLine($"An error occurred: {ex.Message}");
+                        Thread.Sleep(30000); // Retry setelah 30 detik
                     }
                 }
             }
@@ -104,7 +93,7 @@ namespace consumer
                 try
                 {
                     consumeResult = consumer.Consume(TimeSpan.FromSeconds(10));
-                    
+
                     if (consumeResult?.Message?.Value != null)
                     {
                         Console.WriteLine($"Received message: {consumeResult.Message.Value}");
@@ -121,16 +110,17 @@ namespace consumer
                     {
                         consumer.Seek(consumeResult.TopicPartitionOffset);
                     }
-                    Console.WriteLine($"Error occured: {e.Error.Reason}");
+                    Console.WriteLine($"Error occurred: {e.Error.Reason}");
+                    Thread.Sleep(30000); // Retry setelah 30 detik
                 }
                 catch (Exception e)
                 {
-                    
                     if (consumeResult != null)
                     {
                         consumer.Seek(consumeResult.TopicPartitionOffset);
                     }
-                    Console.WriteLine($"Error occured: {e.Message}");
+                    Console.WriteLine($"Error occurred: {e.Message}");
+                    Thread.Sleep(30000); // Retry setelah 30 detik
                 }
             }
         }
